@@ -1,4 +1,3 @@
-
 const userId = {
     name : null,
     identity : null,
@@ -14,79 +13,95 @@ const userName = document.querySelector(".user");
 
 const fetche = "https://10.0.1.211/api";
 
-let global = async() =>{
+// Fetch joke from internal API and display it
 
-    const res = await fetche(`${fetche}/joke`, {
-       method: "GET",
-       headers: {"Content-Type": "application/json"
+async function fetchJoke() {
+    try {
+        const res = await fetch(`${fetche}/joke`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+         }
+     
+     });
+     if (!res.ok) {
+         throw new Error("Failed to fetch joke");
+        
     }
+const data = await res.json();
+const jokeBox = document.getElementById("joke-box");
+jokeBox.innerHTML = ""; // clear old content
+
+data.forEach(joke => {
+    const jokeDiv = document .createElement("div");
+    jokeDiv.classList.add("parents","joke");
+
+    jokeDiv.innerHTML = `
+    <P><strong>Joke:</strong> ${joke.jokeText}<\p>
+    <P><strong>Author:</strong> ${joke.author.name}<\p>
+    <P><strong>Category:</strong> ${joke.category.name}<\p>
+    <P>👍 ${joke.likes} &nbsp;👎 ${joke.dislikes}<\p>
+    <hr />
+    `;
+    jokeBox.appendChild(jokeDiv);
+    // Show the joke in comment area
+    comments.innerHTML = `<div> class = "fetched-joke"><strong> Joke of the day:</strong> ${data.joke ||JSON.stringify(data)}</div>`;
 
 });
-
-if (!res.ok){
-    console.error("Error fetchin")
-    throw error
+// Show the joke in comment area
+    //comments.innerHTML = `<div> class = "fetched-joke"><strong> Joke of the day:</strong> ${data.joke ||JSON.stringify(data)}</div>`;
+    } catch (error) {
+        console.error("Error fetching jokes:", error);
+        document.getElementById("joke-box").textContent = "Could not load jokes.";
+        comments.innerHTML = "<div class = 'error'>failed to load joke from server.</div>"
+    }
 }
-const data = await res.json();
-comments.innerHTML = JSON.stringify(data);
-
-}
-publishBtn.addEventListener("click", () =>{
-  getAll();
-})
 
 
+// Enable/disable publish button based on comment input
 
-
-
-
-
-
-userComment.addEventListener("input", s => {
-    if (!userComment.value) {
+userComment.addEventListener("input", () => {
+    if (!userComment.value.trim()) {
         publishBtn.setAttribute("disabled", "disabled");
         publishBtn.classList.remove("abled")
     }else{
         publishBtn.removeAttribute("disabled");
         publishBtn.classList.add("abled")
     }
-})
+});
+
+// Add user post to DOM
 
 function addpost(){
-    console.log("the button works!")
-    if (!userComment.value) return;
-    userId.name = userName.value;
-    if(userId.name === "Anonymous"){
-        userId.identity = false;
-        userId.Image = "anonymous.png";
-    }else{
-        userId.identity = true;
-        userId.Image = "user.png"
-    }
-    userId.message = userComment.value;
+    
+    if (!userComment.value.trim()) return;
+    userId.name = userName.value.trim() || "Anonymous";
+    userId.identity = userId.name !== "Anonymous";
+    userId.Image = userId.identity ? "user.png" : "anonymous.png";
+    userId.message = userComment.value.trim();
     userId.date = new Date().toLocaleString();
-    let published = 
-    `<div class = "parents">
-    <img src="pix/users-.png">
+    const published = `
+    <div class = "parents">
+       <img src="pix/users-.png">
        <div>
        <h1>${userId.name}</h1>
-       <textarea>${userId.message}</textarea>
+       <textarea readonly>${userId.message}</textarea>
        <div class="engagement-buttons">
-       <button id="LikeBtn" class="button Like">👍<span id="likeCount">0</span></button>
-       <button id="DislikeBtn" class="button Dislike">👎<span id="dislikeCount">0</span></button>
+       <button class="button Like">👍<span id="likeCount">0</span></button>
+       <button class="button Dislike">👎<span id="dislikeCount">0</span></button>
        </div>
        <span class = "date"> ${userId.date}</span>
        </div>
     </div>`;
-
     comments.innerHTML += published;
     userComment.value = "";
 
-    let commentsNum = document.querySelectorAll(".parents").length;
-    document.getElementById("comment").textContent = commentsNum;
+     
+    document.getElementById("comment").textContent = document.querySelectorAll(".parents").length; 
 
     setupLikeDislikeButtons();
 }
+// handle like / dislike buttons
 function setupLikeDislikeButtons() {
     const allParents = document.querySelectorAll('.parents');
 
@@ -144,10 +159,16 @@ function setupLikeDislikeButtons() {
     
     });
 }
-
+// Run when DOM is ready
 // Kald funktionen første gang siden indlæses for eksisterende kommentarer
 document.addEventListener('DOMContentLoaded', () => {
     setupLikeDislikeButtons();
+    fetchJoke(); // call internal API on page load
 });
 publishBtn.addEventListener("click",addpost);
+
+
+
+
+
 

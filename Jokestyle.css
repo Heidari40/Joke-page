@@ -162,3 +162,12 @@ body{
     }
 
 }
+ .joke {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+
